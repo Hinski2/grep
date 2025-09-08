@@ -60,5 +60,13 @@ T Vector_##T##_pop_back(Vector_##T *vec) {  \
 void Vector_##T##_clear(Vector_##T *vec) {  \
     vec -> size = 0;    \
 }   \
+\
+void Vector_##T##_reverse(Vector_##T *vec) {    \
+    for(int i = 0; i < vec -> size / 2; i++) {  \
+        T temp = vec -> vals[i];    \
+        vec -> vals[i] = vec -> vals[vec -> size - i - 1];  \
+        vec -> vals[vec -> size - i - 1] = temp;    \
+    }   \
+}   \
 
 DEFINE_VECTOR(Pair_int)

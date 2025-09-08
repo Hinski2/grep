@@ -18,6 +18,7 @@ void Vector_##T##_free(Vector_##T *vec); \
 void Vector_##T##_push_back(Vector_##T *vec, T val); \
 T Vector_##T##_pop_back(Vector_##T *vec); \
 void Vector_##T##_clear(Vector_##T *vec); \
+void Vector_##T##_reverse(Vector_##T *vec); \
 
 
 DEFINE_VECTOR_PROTOTYPE(Pair_int)

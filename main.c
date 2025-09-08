@@ -6,34 +6,30 @@
 
 // flags
 bool LINE_NO = false;       // -n print line number
-bool IGNORE_CASE = false;   // -i case insensitive     
+bool IGNORE_CASE = false;   // -i case insensitive              //TODO
 bool COUNT = false;         // -c count lines
 bool RECURSIVE = false;     // -r search recursively
-bool USE_REGEX = false;     // -regexp use regex for search
+bool USE_REGEX = false;     // -regexp use regex for search     //TODO
 
-char *path = NULL, *pattern = NULL;
+char *pattern = NULL;
+size_t pattern_occ_cnt;
 
 int main(int argc, char *argv[]) {
-    // printf("chuj kurwa chuj debuuuuuuug"); //!!!!!!!!!!!
-
     if(argc == 1) {
         printf("There is nothing to search for\n");
         exit(EXIT_SUCCESS);
     }
 
-
-    handle_args(argc, argv);
-    check_dir();
+    char *path = handle_args(argc, argv);
+    check_dir(path);
 
     if(RECURSIVE) {
         handle_dir(path);
     } else {
-        FILE *file = path ? fopen(path, "r") : stdin;
-        if(file == NULL) {
-            printf("errror occured when opening file: %s", path);
-            exit(EXIT_FAILURE);
-        }
+        handle_file(path);
+    }
 
-        handle_file(file);
+    if(COUNT) {
+        printf("pattern occured: %d times\n", pattern_occ_cnt);
     }
 }
