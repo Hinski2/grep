@@ -63,6 +63,8 @@ echo "foo123 bar42 baz" | ./my_grep -regex '[a-z]+[0-9]+'
 ./my_grep -c pattern file.txt
 ```
 
+![image](/screenshot_1757429256.png)
+
 ---
 
 ## Project Structure
