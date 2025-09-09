@@ -70,3 +70,4 @@ void Vector_##T##_reverse(Vector_##T *vec) {    \
 }   \
 
 DEFINE_VECTOR(Pair_int)
+DEFINE_VECTOR(int)

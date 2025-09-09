@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <dirent.h>
+#include <regex.h>
 #include "utils.h"
 
 // flags
@@ -12,23 +13,78 @@ extern bool LINE_NO;       // -n print line number
 extern bool IGNORE_CASE;   // -i case insensitive     
 extern bool COUNT;         // -c count lines
 extern bool RECURSIVE;     // -r search recursively
-extern bool USE_REGEX;     // -regexp use regex for search
+extern bool USE_REGEX;     // -regex use regex for search
+extern bool DEBUG_INPUT;   // -d to print input
 
 // path is a path to currently open file / dir that wi will use
 extern char *pattern;
 extern size_t pattern_occ_cnt;
+regex_t regex_pattern;
+Vector_int pi;
+
+void init_search() {
+    static bool inited = false;
+    if(inited) return;
+    inited = true;
+
+    if(USE_REGEX) {
+        if(regcomp(&regex_pattern, pattern, REG_EXTENDED)) {
+            printf("innapropriate regex pattern\n");
+            exit(EXIT_FAILURE);
+        }
+
+        return;
+    } 
+
+    if(IGNORE_CASE) {
+        for(size_t i = 0; pattern[i] != '\0'; i++) 
+            pattern[i] = char_to_upper(pattern[i]);
+    }
+
+    // compute pi
+    int n = strlen(pattern);
+    for(int i = 0; i < n; i++) Vector_int_push_back(&pi, 0); 
+
+    for(int i = 1; i < n; i++) {
+        int j = pi.vals[i - 1];
+        while(j > 0 && pattern[i] != pattern[j])
+            j = pi.vals[j - 1];
+        
+        if(pattern[i] == pattern[j])
+            j++;
+        
+        pi.vals[i] = j;
+    }
+}
+
+char char_to_upper(char c) {
+    if('a' <= c && c <= 'z') c &= ~0x20;
+    return c;
+}
+
+Pair_int search_pattern_regex(char *line, size_t len, size_t start) {
+    init_search();
+    regmatch_t match[1];
+    match[0].rm_so = start;
+    match[0].rm_eo = len;
+
+    if(regexec(&regex_pattern, line, 1, match, REG_STARTEND) == 0) {
+        return (Pair_int) {match[0].rm_so, match[0].rm_eo -1};
+    } else {
+        return (Pair_int) {-1, -1};
+    }
+}
 
 Pair_int search_pattern_str(char *line, size_t len, size_t start) { // TODO change it on kmp
-    size_t pattern_len = strlen(pattern);
-    for(int i = start; i + pattern_len < len; i++) {
-        bool ok = true;
-        for(int j = 0; j < pattern_len && ok; j++) {
-            if(line[i + j] != pattern[j]) ok = false;
-        }
+    init_search();
+    
+    int j = 0, n = pi.size;
+    for(int i = start; i < len; i++) {
+        if(IGNORE_CASE && char_to_upper(line[i]) != pattern[j]) j = pi.vals[j];
+        else if(!IGNORE_CASE && line[i] != pattern[j]) j = pi.vals[j];
+        else j++;
 
-        if(ok) {
-            return (Pair_int){i, i + pattern_len - 1};
-        }
+        if(j == n) return (Pair_int){i - n + 1, i};
     }
 
     return (Pair_int){-1, -1};
@@ -109,7 +165,8 @@ char* handle_args(int argc, char *argv[]) {
         else if(strcmp("-i", argv[i]) == 0) IGNORE_CASE = true;
         else if(strcmp("-c", argv[i]) == 0) COUNT = true;
         else if(strcmp("-r", argv[i]) == 0) RECURSIVE = true;
-        else if(strcmp("-regexp", argv[i]) == 0) USE_REGEX = true;
+        else if(strcmp("-d", argv[i]) == 0) DEBUG_INPUT = true;
+        else if(strcmp("-regex", argv[i]) == 0) USE_REGEX = true;
         else if(strcmp("--", argv[i]) == 0) break;
         else if(!pattern) pattern = argv[i];
         else if(!path) path = strdup(argv[i]);
@@ -191,7 +248,3 @@ void handle_dir(char *path) {
     closedir(dir);
     free(path);
 };
-
-// TODO
-void init_search() {};
-Pair_int search_pattern_regex(char *line, size_t len, size_t start) {};

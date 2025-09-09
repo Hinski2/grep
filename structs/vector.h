@@ -22,5 +22,6 @@ void Vector_##T##_reverse(Vector_##T *vec); \
 
 
 DEFINE_VECTOR_PROTOTYPE(Pair_int)
+DEFINE_VECTOR_PROTOTYPE(int)
 
 #endif
